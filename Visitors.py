@@ -4,7 +4,9 @@ class Visitors:
         self.__filename = filename
         self.__dic = dict()  #<int, <string, float> >
         self.__POIcount = 0
-        self.__mapper = dict()  # maps the sequential ID to the original ones
+        self.__mapperToID = dict()
+        self.__mapperToStr = dict()
+        self.__visDic = dict()
         self.__readData(self.__filename)
 
 
@@ -34,36 +36,42 @@ class Visitors:
                 :return:
         """
         locDic = dict()
+        visDic = dict()
         locCount = 0
-        visID = None
         visCount = 0
+        visID = 0
         with gzip.open(filename, 'rt') as fp:
             line = fp.readline()
             while line:
                 line = fp.readline()
                 strings = line.split()
                 if len(strings) == 5:
-                    visID = int(strings[0])
+                    visString = strings[0]
+                    visInt = int(visString)
                     locString = strings[4]
                     if locString not in locDic:
                         locDic[locString] = locCount
-                        locCount += 1
+                        locCount = locCount + 1
                     locID = locDic[locString]
+                    if visString not in visDic:
+                        visDic[visString] = visCount
+                        visCount = visCount + 1
+                    visID = visDic[visString]
                     # Update the Map entries for the current visitor
-                    if visCount in self.__dic:
-                        tmpMap = self.__dic[visCount]
+                    if visInt in self.__dic.keys():
+                        tmpMap = self.__dic[visInt]
                         if locID in tmpMap:
-                            tmpCts = tmpMap.get(locID)
-                            self.__dic[visCount][locID] = tmpCts+1
+                            tmpCts = tmpMap[locID]
+                            self.__dic[visInt][locID] = tmpCts+1
                         else:
-                            self.__dic[visCount][locID] = float(1)
+                            self.__dic[visInt][locID] = float(1)
                     else:
-                        self.__dic[visCount] = dict()
-                        self.__mapper[visCount] = visID
-                        self.__dic[visCount][locID] = float(1)
-                        visCount += 1
-            self.__POIcount = locCount
-            fp.close()
+                        self.__dic[visInt] = dict()
+                        self.__dic[visInt][locID] = float(1)
+                        self.__mapperToID[visString] = visID
+                        self.__mapperToStr[visID] = visString
+        self.__POIcount = locCount
+        fp.close()
 
     def getVisitorPOIs(self, visID):
         """
@@ -108,8 +116,14 @@ class Visitors:
         """
         return self.__POIcount
 
-    def getMapper(self):
+    def getMapper(self, string):
         """
-        :return: A dictionary that maps the sequential ID given to visitors to the original one in the dataset.
+        :param string:  A string in {"toID, toStr"} to specify which mapper to return.
+        :return:
         """
-        return self.__mapper
+        if string not in {"toID", "toStr"}:
+            print("This dictionary doesn't exist")
+        if string == "toID":
+            return self.__mapperToID
+        else:
+            return self.__mapperToStr

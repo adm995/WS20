@@ -20,10 +20,13 @@ class Main:
         checkinsFilename = 'data\loc-brightkite_totalCheckins.txt.gz'
         G = nx.read_edgelist(edgesFileName, nodetype=int)
         v = Visitors(filename=checkinsFilename)
-        for n in (G.edges(0)):
-            print(n[1])
-        #ltm = LTM(G, [0, 10, 100], v.getMap(), v.getPOIcount())
-        #print(ltm.getInfectedNodes())
+        mapping = v.getMapper("toID")
+        G = nx.relabel_nodes(G, mapping)
+        m = v.getMap()
+        print(sorted(m.keys()))
+        print(sorted(G))
+        ltm = LTM(G, [0, 10, 100], v.getMap(), v.getPOIcount())
+        print(ltm.getInfectedNodes())
 
     if __name__ == '__main__':
         main()
