@@ -2,7 +2,7 @@ from scipy.spatial import distance
 import numpy as np
 import networkx as nx
 import math
-from WS20.Similarities import Similarities
+from Similarities import Similarities
 
 
 class LTM:
