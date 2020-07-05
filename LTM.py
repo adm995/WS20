@@ -30,10 +30,8 @@ class LTM:
                     if neighbour in self.__visitors.keys():
                         v2 = self.__visitors[neighbour]
                         weight = Similarities.get_cosine_similarity(v1, v2)
-                        print(weight)
                         self.__weights[i] = {neighbour: weight}
                         self.__weights[neighbour] = {i: weight}
-
 
     def __computeInfluence(self):
         k = len(self.__seeds)
