@@ -1,17 +1,14 @@
 import networkx as nx
 from LTM import LTM
-from Visitors import Visitors
-import geopy.geocoders
-from geopy.geocoders import Nominatim
-from functools import partial
+from UsersReader import UsersReader
+
 
 class Main:
-
     """
     Undirected friendship graph: loc - brightkite_edges.txt
-    Nodes: 58228 Edges 214078
+    Nodes: 58'228 Edges 214'078
     Visitors checkins log: loc - brightkite_totalCheckins.txt
-    Locations checkins: 4491143
+    Locations checkins: 4'491'143
     """
 
 
@@ -19,18 +16,17 @@ def main():
     edgesFileName = 'data\loc-brightkite_edges.txt.gz'
     checkinsFilename = 'data\loc-brightkite_totalCheckins.txt.gz'
     G = nx.read_edgelist(edgesFileName, nodetype=int)
-    v = Visitors(filename=checkinsFilename)
-    mapping = v.getMapper("toID")
+    users = UsersReader(filename=checkinsFilename)
+    mapping = users.getMapper("toID")
     G = nx.relabel_nodes(G, mapping)
-    print("number of users: "+str(len(v.getVisitorsIDs())))
-    print("number of POIs: "+str(v.getPOIcount()))
-    ltm = LTM(G, [0, 10, 100], v.getMap(), v.getPOIcount())
-    print(ltm.getInfectedNodes())
-    geolocator = Nominatim(user_agent="WS2020")
-    coords = v.getPOIsCoords()
-    reverse = partial(geolocator.reverse, language="en")
-    for poi in coords.keys():
-        print(reverse(coords[poi]).raw["address"])
+    lista = []
+    for node in G.nodes:
+        lista.append(len(G.edges(node)))
+    print("avg friends:" + str(sum(lista) / (len(lista))))  # 7 friends
+    print("friends: " + str(sorted(lista, reverse=True)))
+    print("number of users: " + str(len(users.getVisitorsIDs())))
+    print("number of POIs: " + str(users.getPOIcount()))
+    print("Users IDs:" + str(sorted(users.getMap().keys())))
 
 
 if __name__ == '__main__':

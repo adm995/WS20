@@ -1,7 +1,8 @@
 import gzip
+from geopy.geocoders import Nominatim
+from functools import partial
 
-
-class Visitors:
+class UsersReader:
     def __init__(self, filename):
         self.__filename = filename
         self.__dic = dict()  # <int, <string, float> >
@@ -98,7 +99,7 @@ class Visitors:
 
     def getVisitorsIDs(self):
         """
-        The set of visitors ids in the dataset.
+        The set of visitors ID in the dataset.
         :return: The sorted set of visitors ids.
         """
         sortedKeys = list(self.__dic.keys())
@@ -123,7 +124,7 @@ class Visitors:
         :return: the mapper (if any) associated to the input string.
         """
         if string not in {"toID", "toStr"}:
-            print("This dictionary doesn't exist")
+            raise ValueError
         if string == "toID":
             return self.__mapper_to_ID
         else:
@@ -131,6 +132,16 @@ class Visitors:
 
     def getPOIsCoords(self):
         """
-        :return: A dictionary that maps each POI's id into its pair of coordinates.
+        :return: A dictionary that maps each POI's ID into its pair of coordinates.
         """
         return self.__coordinates
+
+    def __getPOIsCategory(self):
+        """
+        :return: For each pair of POI's coordinates assign a category label exploiting GeoPy libraries.
+        """
+        geolocator = Nominatim(user_agent="WS2020")
+        coords = self.getPOIsCoords()
+        reverse = partial(geolocator.reverse, language="en")
+        for poi in coords.keys():
+            print(reverse(coords[poi]).raw["address"])

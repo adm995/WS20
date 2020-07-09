@@ -12,7 +12,6 @@ class Connectivity:
 
     def get_topTenBrokers(self, G):
         """
-
         :param G: Undirected graph
         :return: A dictionary that contains for each CC of G the top 10 brokers in the CC and the relative score.
         """
