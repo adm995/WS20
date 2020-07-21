@@ -1,8 +1,7 @@
 import networkx as nx
-from LTM import LTM
+from RecommenderNN import RecommenderNN
+from numpy import loadtxt
 from UsersReader import UsersReader
-
-
 class Main:
     """
     Undirected friendship graph: loc - brightkite_edges.txt
@@ -13,8 +12,9 @@ class Main:
 
 
 def main():
-    edgesFileName = 'data\loc-brightkite_edges.txt.gz'
-    checkinsFilename = 'data\loc-brightkite_totalCheckins.txt.gz'
+
+    edgesFileName = '/content/drive/My Drive/loc-brightkite_edges.txt.gz'
+    checkinsFilename = '/content/drive/My Drive/loc-brightkite_totalCheckins.txt.gz'
     G = nx.read_edgelist(edgesFileName, nodetype=int)
     users = UsersReader(filename=checkinsFilename)
     mapping = users.getMapper("toID")
@@ -26,7 +26,8 @@ def main():
     print("friends: " + str(sorted(lista, reverse=True)))
     print("number of users: " + str(len(users.getVisitorsIDs())))
     print("number of POIs: " + str(users.getPOIcount()))
-    print("Users IDs:" + str(sorted(users.getMap().keys())))
+    #print("Users IDs:" + str(sorted(users.getMap().keys())))
+    NN = RecommenderNN(users, G)
 
 
 if __name__ == '__main__':
