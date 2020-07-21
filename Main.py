@@ -13,8 +13,8 @@ class Main:
 
 def main():
 
-    edgesFileName = '/content/drive/My Drive/loc-brightkite_edges.txt.gz'
-    checkinsFilename = '/content/drive/My Drive/loc-brightkite_totalCheckins.txt.gz'
+    edgesFileName = '/loc-brightkite_edges.txt.gz'
+    checkinsFilename = '/loc-brightkite_totalCheckins.txt.gz'
     G = nx.read_edgelist(edgesFileName, nodetype=int)
     users = UsersReader(filename=checkinsFilename)
     mapping = users.getMapper("toID")
