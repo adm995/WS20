@@ -3,8 +3,6 @@ from geopy.geocoders import Nominatim
 from functools import partial
 from typing import Dict, List, Set
 from collections import Counter
-
-
 class UsersReader:
     def __init__(self, filename):
         self.__filename = filename
@@ -20,7 +18,7 @@ class UsersReader:
         sortedKeys = list(self.__dic.keys())
         sortedKeys.sort()
         self.__IDs = sortedKeys
-        #self.__max_cts = self.__getMaxCts()
+        self.__max_cts = self.__getMaxCts()
         #self.__computePOIdict()
     """ example of dataset row:
     visID                 ts                   L1           L2          PoI              ID
@@ -170,12 +168,17 @@ class UsersReader:
 
     def __getMaxCts(self):
         self.__max_cts = 0
+        avg = 0
         all_cts  = []
         for user_id in self.__IDs:
             values = self.__dic[user_id].values()
+            avg += len(values)
             m = max(values)
             all_cts.extend(values)
             if self.__max_cts < m:
                 self.__max_cts = m
         print("max cts: "+str(self.__max_cts))
         print("top 10 most common cts: "+str(Counter(all_cts).most_common()[-10:]))
+        print("avg cts: "+str(avg / len(self.__IDs)))
+    def getPOIsIDs(self):
+      return self.__POI_dict.keys()
