@@ -5,7 +5,7 @@ class Similarities:
 
     def __init__(self, filename, collection):
         self.__filename = filename
-        self.__collection = collection  # <int, <string, float> >
+        self.__collection = collection  # <user_id: int, <poi_id: str, cts: float> >
         self.__computeSims(self.__collection)
 
     @staticmethod
@@ -56,11 +56,13 @@ class Similarities:
 
     def __computeSims(self, collection):
         f = open('similarities.txt', 'w')
-        for dicLoc1 in collection:
-            for dicLoc2 in collection:
-                f = open('similarities.txt', 'a')
-                f.write("Vis1: " + dicLoc1 + " Vis2: " + dicLoc2 +
-                        "Jaccard Sim: " + str(self.get_jaccard_similarity(collection[dicLoc1], collection[dicLoc2])) +
-                        " Cosine Sim: " + str(self.get_cosine_similarity(collection[dicLoc1], collection[dicLoc2])) +
-                        "\n")
+        users_id = sorted(collection.keys())
+        for user1_id in users_id:
+            for user2_id in users_id:
+                if user1_id > user2_id:
+                    f = open('similarities.txt', 'a')
+                    f.write("Vis1: " + user1_id + " Vis2: " + user2_id +
+                            "Jaccard Sim: "+str(self.get_jaccard_similarity(collection[user1_id], collection[user2_id])) +
+                            " Cosine Sim: "+str(self.get_cosine_similarity(collection[user1_id], collection[user2_id])) +
+                            "\n")
         f.close()
