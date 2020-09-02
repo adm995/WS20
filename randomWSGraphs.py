@@ -13,9 +13,9 @@ def main():
         next(edges, '')   # skip a line
         G = nx.read_edgelist(edges, nodetype=int, delimiter=",")
     edges.close()
-    node_list = []
+    node_list = set()
     for node in G.nodes:
-        node_list.append(node)
+        node_list.add(node)
 
     components = int(len(node_list)/10)
     print(len(node_list))
@@ -29,6 +29,8 @@ def main():
             nodesCClength = len(node_list)
         print("The CC " + str(i) + " , will have: " + str(nodesCClength) + " nodes")
         CC = random.sample(node_list, nodesCClength)
+        node_list = node_list - set(CC)
+        print("Remaining nodes: "+str(len(node_list)))
         final_CC_list.append(CC)
 
     f = open('dataset_test2.txt', 'a')
