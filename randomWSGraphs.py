@@ -1,65 +1,59 @@
-import networkx as nx
 from UsersReader import UsersReader
 from random import randrange, uniform
 import networkx as nx
 import random
+import csv
 from Connectivity import Connectivity
 
+
 def main():
-    edgesFileName = 'new_dataset.txt'
-    G = nx.read_edgelist(edgesFileName, nodetype=int)
-    lista = []
+    edgesFileName = '/Users/Angelo/Desktop/gowalla/gowalla_friendship.csv'
+    G = None
+    with open(edgesFileName, 'rb') as edges:
+        next(edges, '')   # skip a line
+        G = nx.read_edgelist(edges, nodetype=int, delimiter=",")
+    edges.close()
+    node_list = []
     for node in G.nodes:
-        lista.append(node)
+        node_list.append(node)
 
-    ten= int(len(lista)/10)
-    i = 0
-    j = 0
-    print(len(lista))
-    print(ten)
-    n = 10
-    print("le componenti connesse saranno: " + str(n))
-    lista = lista
-    finalList = []
-    for i in range(n):
-        nodesCClength = random.randint(int((len(lista) / (n - i)) / 2), int((len(lista) / (n - i)) * 2))
-        if ((nodesCClength > len(lista)) and (i == n - 1)):
-            nodesCClength = len(lista)
-        print("la componente connessa " + str(i) + " , avrà: " + str(nodesCClength) + " nodi ")
-        listaCC = []
-        for j in range(nodesCClength):
-            if (len(lista) > 0):
-                nodeCC = random.choice(lista)
-                lista.remove(nodeCC)
-                listaCC.append(nodeCC)
-        finalList.append(listaCC)
+    components = int(len(node_list)/10)
+    print(len(node_list))
+    print(components)
+    CC_number = 30
+    print("There will be "+str(CC_number)+" connected components")
+    final_CC_list = []
+    for i in range(CC_number):
+        nodesCClength = random.randint(int((len(node_list) / (CC_number - i)) / 2), int((len(node_list) / (CC_number - i)) * 2))
+        if nodesCClength > len(node_list) and (i == CC_number - 1):
+            nodesCClength = len(node_list)
+        print("The CC " + str(i) + " , will have: " + str(nodesCClength) + " nodes")
+        CC = random.sample(node_list, nodesCClength)
+        final_CC_list.append(CC)
 
-    #print(len(finalList))
     f = open('dataset_test2.txt', 'a')
-    for l in finalList:
-        mapping={}
-        j=0
-        for a in l:
-            mapping[j]=a
-            j=j+1
-        G = nx.watts_strogatz_graph(len(l), 10, 0.5)
+    for CC in final_CC_list:
+        mapping = {}
+        new_id = 0
+        for node in CC:
+            mapping[new_id] = node
+            new_id = new_id+1
+        G = nx.watts_strogatz_graph(len(CC), 30, 0.5)
         H = nx.relabel_nodes(G, mapping)
-        for coppia in nx.edges(H):
-            k=0
-            stampa=""
-            for nodo1 in coppia:
-                if k==0:
-                   stampa=stampa+str(nodo1)
-                   k=k+1
+        for pair in nx.edges(H):
+            k = 0
+            print_str = ""
+            for node1 in pair:
+                if k == 0:
+                    print_str = print_str+str(node1)
+                    k = k+1
                 else:
-                   stampa=stampa+ "  " + str(nodo1) + "\n"
-                 #  print(stampa)
-                   f.write(stampa)
-                   stampa = ""
-                   k=0
+                    print_str = print_str + "  " + str(node1) + "\n"
+                    f.write(print_str)
+                    print_str = ""
+                    k = 0
     f.close()
+
 
 if __name__ == '__main__':
     main()
-
-
