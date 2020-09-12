@@ -132,3 +132,9 @@ dmypy.json
 *.gz
 *.txt
 *.idea/
+*.pdf
+*.html
+*.csv
+data
+documents
+output

@@ -1,15 +1,27 @@
 import math
+import os
+from typing import Dict
+import csv
+import networkx as nx
 
 
 class Similarities:
 
-    def __init__(self, filename, collection):
-        self.__filename = filename
-        self.__collection = collection  # <user_id: int, <poi_id: str, cts: float> >
-        self.__computeSims(self.__collection)
+    def __init__(self, output_dir: str, users: Dict, G: nx.Graph):
+        """
+        This class provides methods to measure Jaccard and Cosine similarities among all pair of users inside
+        the dataset.
+        :param output_dir: Directory where to write the output files
+        :param users: Dictionary that maps each user ID into its visited POIs with relative cts
+        :param G: Friendship graph
+        """
+        self.__G = G
+        self.__output_dir = output_dir
+        self.__users = users  # <user_id: int, <poi_id: str, cts: float> >
+        self.__computeSims(self.__users)
 
     @staticmethod
-    def get_cosine_similarity(v1, v2):
+    def get_cosine_similarity(v1: Dict, v2: Dict):
         """
         Compute cosine similarity of v1 to v2: (v1 dot v2)/{||v1||*||v2||)
         :param v1: Dictionary that maps for each POI the relative cts for visitor v1.
@@ -45,7 +57,7 @@ class Similarities:
                 return 0
 
     @staticmethod
-    def get_jaccard_similarity(v1, v2):
+    def get_jaccard_similarity(v1: Dict, v2: Dict):
         """
         Compute Jaccard similarity of v1 to v2.
         :param v1: Dictionary that maps for each POI the relative cts for visitor v1.
@@ -54,15 +66,28 @@ class Similarities:
         """
         return len(v1.keys() & v2.keys()) / float(len(v1.keys() | v2.keys()))
 
-    def __computeSims(self, collection):
-        f = open('similarities.txt', 'w')
-        users_id = sorted(collection.keys())
-        for user1_id in users_id:
-            for user2_id in users_id:
-                if user1_id > user2_id:
-                    f = open('similarities.txt', 'a')
-                    f.write("Vis1: " + user1_id + " Vis2: " + user2_id +
-                            "Jaccard Sim: "+str(self.get_jaccard_similarity(collection[user1_id], collection[user2_id])) +
-                            " Cosine Sim: "+str(self.get_cosine_similarity(collection[user1_id], collection[user2_id])) +
-                            "\n")
-        f.close()
+    def __computeSims(self, users: Dict):
+        """
+        Print on a csv file the Jaccard and cosine similarities between each user and its friends.
+        :param users: the dictionary that contains all users in the dataset and their visited POIs
+        :return:
+        """
+        out_path = os.path.join(self.__output_dir, "similarities.csv")
+        if not os.path.isfile(out_path):
+            with open(out_path, 'w',  newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(["V1", "V2", "Jac", "Cos"])
+                users_id = sorted(users.keys())
+                row = 1
+                i = 0
+                for user1_id in users_id:
+                    i += 1
+                    print("User "+str(i)+" of "+str(len(users_id)))
+                    for user2_id in self.__G[user1_id]:
+                        if user2_id in users:
+                            jac = self.get_jaccard_similarity(users[user1_id], users[user2_id])
+                            cos = self.get_cosine_similarity(users[user1_id], users[user2_id])
+                            writer.writerow([row, str(user1_id), str(user2_id), str(jac), str(cos)])
+                            row += 1
+        else:
+            print("Similarities already written on file")

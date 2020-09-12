@@ -1,12 +1,20 @@
 import gzip
-from geopy.geocoders import Nominatim
-from functools import partial
 from typing import Dict, List, Set
-from collections import Counter
+import networkx as nx
+from Similarities import Similarities
 
 
 class UsersReader:
-    def __init__(self, filename):
+
+    def __init__(self, filename: str, G: nx.Graph):
+        """
+        This class provides methods to read from the given filename the dataset extracting and putting in helper
+        data structures all the important informations about users and POIs. So that they can be used in all the next
+        steps of the project.
+        :param filename: Where is stored the checkins dataset
+        :param G: Friendship graph
+        """
+        self.__G = G
         self.__filename = filename
         self.__dic = dict()  # <int, <string, float> >
         self.__POI_count = 0
@@ -14,24 +22,19 @@ class UsersReader:
         self.__mapper_to_str = dict()
         self.__POI_dict = dict()
         self.__POI_category = dict()
-        self.__coordinates = dict()
         self.__readData(self.__filename)
         sortedKeys = list(self.__dic.keys())
         sortedKeys.sort()
         self.__IDs = sortedKeys
-        self.__max_cts = self.__getMaxCts()
+        # self.__checkFriendsSim()
 
-    """ example of dataset row:
-    visID                 ts                   L1           L2          PoI              ID
-    0          2010 - 10 - 17T01: 48:53Z   39.747652     -104.99251      88      c46bf20db295831bd2d1718ad7e6f5
-    """
-
-    def __readData(self, filename):
+    def __readData(self, filename: str):
         """
             Given the filename of the dataset this method reads each line from the dataset file and build a dictionary
             data - structure that for each visitor v stores all the visited POIs of v and the relative cts (the number
             of times that v has visited the POI). Are omitted all the PoI not visited from v, is implicitly assumed a 0
-            value for each of them.
+            value for each of them. Moreover saves also informations about the POIs, creating a dictionary that maps
+            each POI ID into the relative category.
 
             Example:
                             PoI x: -> 3
@@ -113,7 +116,6 @@ class UsersReader:
         :return: The number of times in which the visitor with id vis_id has been at POI with id loc_id.
         """
         if user_id not in self.__dic:
-            # print("The dataset doesn't contain any user with ID "+str(user_id))
             return 0
         if loc_id not in self.__dic[user_id]:
             return 0
@@ -126,13 +128,13 @@ class UsersReader:
         """
         return self.__IDs
 
-    def getMap(self):
+    def getMap(self) -> Dict:
         """
         :return: The entire dictionary of users.
         """
         return self.__dic
 
-    def getPOIcount(self):
+    def getPOIcount(self) -> int:
         """
         :return: The number of distinct POI in the dataset.
         """
@@ -150,12 +152,6 @@ class UsersReader:
         else:
             return self.__mapper_to_str
 
-    def getPOIsCoords(self):
-        """
-        :return: A dictionary that maps each POI's ID into its pair of coordinates.
-        """
-        return self.__coordinates
-
     def getCategories(self):
         """
         :return: A dictionary that maps each POI's ID into its category string.
@@ -169,22 +165,34 @@ class UsersReader:
         return self.__POI_category[poi_id]
 
     def getPOIvisitors(self, poi_id) -> Set[int]:
+        """
+        Given a POI id the methods returnss the IDs set of all users that visited that POI.
+        :param poi_id: the ID of a location
+        :return: The set of users that have visited the POI with ID poi_id
+        """
         return self.__POI_dict[poi_id]
 
-    def __getMaxCts(self):
-        self.__max_cts = 0
-        avg = 0
-        all_cts = []
-        for user_id in self.__dic:
-            values = self.__dic[user_id].values()
-            avg += len(values)
-            m = max(values)
-            all_cts.extend(values)
-            if self.__max_cts < m:
-                self.__max_cts = m
-        print("max cts: " + str(self.__max_cts))
-        print("top 10 most common cts: " + str(Counter(all_cts).most_common()[-10:]))
-        print("avg cts: " + str(avg / len(self.__IDs)))
-
     def getPOIsIDs(self):
+        """
+        Return the IDs of all users in the dataset.
+        :return:
+        """
         return self.__POI_dict.keys()
+
+    def __checkFriendsSim(self):
+        """
+        Compute the average Jaccard similarity between the vectors of visited POI for each pair of users
+        :return:
+        """
+        all = 1
+        global_sim = 0
+        users = list(self.__IDs)
+        for i in range(len(users)):
+            user = users[i]
+            for friend in self.__G[user]:
+                if friend in self.__dic:
+                    all += 1
+                    sim = Similarities.get_jaccard_similarity(self.__dic[user], self.__dic[int(friend)])
+                    global_sim += sim
+            if all > 0:
+                print("Mean friends similarity: "+str(global_sim/all))

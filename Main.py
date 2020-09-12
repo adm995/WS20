@@ -1,43 +1,71 @@
 import networkx as nx
-from numpy import loadtxt
 from UsersReader import UsersReader
-# from RecommenderNN import RecommenderNN
-import json
+from RecommenderNN import RecommenderNN
 from Connectivity import Connectivity
-import csv
 from Preprocessing import Preprocessing
+from Similarities import Similarities
+from LTM import LTM
+import os
+import gzip
+
 
 class Main:
-    """
-    Undirected friendship graph: loc - brightkite_edges.txt
-    Nodes: 58'228 Edges 214'078
-    Visitors checkins log: loc - brightkite_totalCheckins.txt
-    Locations checkins: 4'491'143
-    """
+
+    def __init__(self):
+        self.ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+    def start(self):
+
+        output_dir = os.path.join(self.ROOT_DIR, "output")
+        data_dir = os.path.join(self.ROOT_DIR, "data")
+
+        edgesFileName_gw_small_random = os.path.join(data_dir, "gowalla_small_graph_random.txt.gz")
+        edgesFileName_gw_small_original = os.path.join(data_dir, "loc-gowalla_edges.txt.gz")
+        edgesFileName_gw_full_random = os.path.join(data_dir, "gowalla_full_graph_random.txt.gz")
+        edgesFileName_gw_full = os.path.join(data_dir, "gowalla_full_graph.csv.gz")
 
 
-def main():
+        checkinsFilename_gw_small_cat = os.path.join(data_dir, "checkins_small_cat.txt.gz")
+        checkinsFilename_gw_full_cat = os.path.join(data_dir, "checkins_full_cat.txt.gz")
 
-    edgesFileName_gw = '/content/drive/My Drive/WS2020/loc-gowalla_edges.txt.gz'
-    checkinsFilename_gw = '/content/drive/My Drive/WS2020/loc-gowalla_totalCheckins.txt.gz'
-    watts = "C:/Users/Angelo/Documents/PyCharmProjects/WS20/data/dataset_test.txt.gz"
-    G = nx.read_edgelist(watts, nodetype=int)
-    print("Graph loaded")
-    C = Connectivity(G)
-    print(C.connected_component(G))
-    users = UsersReader(filename=checkinsFilename_gw)
-    mapping = users.getMapper("toID")
-    # G = nx.relabel_nodes(G, mapping)  RELABEL NODES FROM 0 TO N
-    lista = []
-    for node in G.nodes:
-        lista.append(len(G.edges(node)))
-    avg_friends = sum(lista) / (len(lista))
-    print("avg friends:" + str(avg_friends))  # 9 friends
-    # print("friends: " + str(sorted(lista, reverse=True)))
-    # print("number of users: " + str(len(users.getVisitorsIDs())))
-    # print("number of POIs: " + str(users.getPOIcount()))
-    # print("Users IDs:" + str(sorted(users.getMap().keys())))
-    #NN = RecommenderNN(users, G, avg_friends)
+        checkins = checkinsFilename_gw_small_cat
+        edges = edgesFileName_gw_small_random
+
+        if ".csv" in edges:
+            with gzip.open(edges, 'rb') as edgescsv:
+                next(edgescsv, '')  # skip headers line
+                G = nx.read_edgelist(edgescsv, nodetype=int, delimiter=",")  # , delimiter=","
+            edgescsv.close()
+        else:
+            G = nx.read_edgelist(edges, nodetype=int)
+
+        is_full = "full" in checkins
+
+        # TASK 1: UsersReader creates a dictionary that maps each user ID in its list of POIs and the relative CTS: DONE
+        users = UsersReader(filename=checkins, G=G)
+
+        # TASK 2a: Print Cosine/Jaccard similarity for each pair of nodes: DONE
+        sim = Similarities(output_dir, users.getMap(), G)
+
+        # TASK 2b: select top 10 dense CC
+        c = Connectivity(G, output_dir)
+        topDenseCC = c.getMostDenseCC()[0]
+
+        # TASK 2c: find top 10 brokers in top 10 dense CC
+        top10brokers = c.getTopTenBrokers()
+
+        # TASK 2d: from top 20 brokers in the most dense CC apply LTM
+        top20brokers = c.getTopTwentyBrokers()
+        influence = LTM(topDenseCC, top20brokers[1], users.getMap(), output_dir)
+
+        # TASK 3 and 4: create and evaluate the recommender system
+        nodes = []
+        for node in G.nodes:
+            nodes.append(len(G.edges(node)))
+        avg_friends = 1 if is_full else round((sum(nodes) / (len(nodes))) / 2)
+        NN = RecommenderNN(users, G, avg_friends, is_full, data_dir)
+
 
 if __name__ == '__main__':
-    main()
+    Main = Main()
+    Main.start()
