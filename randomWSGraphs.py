@@ -7,7 +7,7 @@ import os
 def createRandomGraph():
     """
     Create a random graph made up of 10 CC obtained partitioning the set of nodes of another existing graph and then
-    adding (with 0.5 probability for each one) 30 edges from each node toward other nodes inside he same CC.
+    adding (with 0.5 probability for each one) 30 edges from each node toward other nodes inside the same CC.
     :return:
     """
     ROOT_DIR = os.path.dirname(os.path.abspath(__file__))

@@ -67,7 +67,6 @@ class RecommenderNN:
         all_data = np.zeros((rows_number, cols_number))
         row = 0
         for user_id in ids:
-            print(user_id)
             friends_cts = []
             for poi_id in users.getVisitorPOIs(user_id):
                 all_data[row, 0] = self.__mapper[str(user_id)]

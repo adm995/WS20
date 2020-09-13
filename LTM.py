@@ -30,7 +30,9 @@ class LTM:
     def __fillThresholds(self):
         """
         Fill the dictionary that contains the threshold values to be reached by each node in the graph to be active.
-        It is 1/degree(node) for each node.
+        Actual is the current amount of received influence, 0 for every node at start.
+        Threshold is 1/degree(node) for each node.
+        Active is True for all nodes that have the actual value >= of their threshold value.
         """
         for node_id in self.__g.nodes:
             self.__actual[node_id] = 0
@@ -63,7 +65,7 @@ class LTM:
         out_path = os.path.join(self.__output, "influence.txt")
         currActiveNodes = self.__seeds
         for step in range(100):
-            print(str(len(currActiveNodes)) + " activated nodes at iteration " + str(step + 1) + " " + str(currActiveNodes) + "\n\n")
+            print(str(len(currActiveNodes)) + " new active nodes at iteration " + str(step + 1) + " " + str(currActiveNodes) + "\n\n")
             print_str += (str(len(currActiveNodes)) + " new active nodes at iteration " + str(step + 1) + ": " + str(currActiveNodes) + "\n\n")
             for i in range(len(currActiveNodes)):
                 activeVertex = currActiveNodes.pop(0)

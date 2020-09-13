@@ -87,8 +87,6 @@ class Preprocessing:
         else:
             print("Please put in the project data folder all the missing files")
 
-        print(self.__subcat_to_maincat)
-
     def __recursiveHelper(self, json_obj, parent):
         for sub_category in json_obj:
             subcat_id = int(sub_category["url"].replace("/categories/", ""))
